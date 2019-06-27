@@ -1,3 +1,112 @@
+# Cross compile in Docker container using MXE
+
+## Prepare
+
+- Create Dockerfile:
+```
+RUN apt-get install -y --no-install-recommends \
+	autoconf \
+	automake \
+	autopoint \
+	binutils \
+	bison \
+	build-essential \
+	ca-certificates \
+	cmake \
+	debhelper \
+	devscripts \
+	fakeroot \
+	flex \
+	gcc \
+	git \
+	gperf \
+	intltool \
+	libgdk-pixbuf2.0-dev \
+	libffi-dev \
+	libgmp-dev \
+	libmpc-dev \
+	libmpfr-dev \
+	libtool \
+	libtool-bin \
+	libz-dev \
+	openssl \
+	patch \
+	pkg-config \
+	p7zip-full \
+	ruby \
+	scons \
+	subversion \
+	texinfo \
+	unzip \
+	wget \
+	lzip \
+	python3-dev
+
+RUN mkdir /build
+WORKDIR  /build
+RUN git clone https://github.com/mxe/mxe.git
+
+RUN cd mxe && make qtbase
+RUN cd mxe && make qtmultimedia
+RUN cd mxe && make qtcharts
+
+ENV PATH /build/mxe/usr/bin:$PATH
+
+RUN ln -s /build/mxe/usr/bin/i686-w64-mingw32.static-qmake-qt5 /build/mxe/usr/bin/qmake
+```
+- Build 'qt' image:
+```
+docker build -t qt .
+```
+- Install `Windows x86 executable installer` of Python3.7 [https://www.python.org/downloads/release/python-370/] to C:\Python37
+- Install `pexports` and `dlltools` from MinGW [https://osdn.net/projects/mingw/downloads/68260/mingw-get-setup.exe/]
+  - `dlltools`: `mingw-get install mingw32-binutils-bin`
+  - `pexports`: `mingw-get install mingw-utils`
+- Generate Python lib:
+```
+cd C:\Python37
+C:\MinGW\bin\pexports.exe python37.dll > python27.def
+C:\MinGW\bin\dlltool.exe --dllname python37.dll -d python37.def -l libpython37.a
+```
+
+## Adjust sources
+
+- Clone 'rdm' repo:
+```
+git clone --recursive https://github.com/uglide/RedisDesktopManager.git -b 2019 rdm
+```
+- Adapt the sources to compile:
+
+- `3rdparty/pyotherside.pri`:
+```
+win32* {
+    QMAKE_LIBS += -L/usr/python37/libs -lpython37
+    INCLUDEPATH += /usr/python37/include
+}
+```
+
+- `3rdparty.pri`:
+```
+win32* {
+	QMAKE_CXXFLAGS += -D_hypot=hypot
+```
+- Download and extract to 3rdparty dir: `https://www.nuget.org/packages/zlib-msvc14-x64/1.2.11.7795`
+
+## Compile
+- Run docker container whith sources and python as volumes:
+```
+docker run -it -v C:\Python37-x64:/usr/python37 -v D:\Docker\Qt\RedisDesktopManager:/usr/rdm qt bash
+```
+- (INTO DOCKER CONTAINER):
+```
+cd /usr/rdm/src
+qmake
+make
+```
+- Check `D:\Docker\Qt\RedisDesktopManager\bin\windows\release` for .exe build and copy there python embedded https://www.python.org/downloads/release/python-370/
+
+
+
 # How to compile Redis desktop manager on Windows platform
 
 - Install Visual Studio 2015 Community with Updates, even if you have a newer Visual Studio installed:
