@@ -1,0 +1,35 @@
+FROM ubuntu:16.04 AS base
+
+FROM base as builder
+RUN apt-get update && apt-get install -y --no-install-recommends git lsb-release sudo software-properties-common build-essential python3-dev
+RUN mkdir /rdm && cd /rdm && git clone --recursive https://github.com/uglide/RedisDesktopManager.git .
+RUN cd /rdm/src && ./configure && . /opt/qt59/bin/qt59-env.sh && qmake && make && sudo make install
+
+RUN mkdir /install
+RUN apt install -y python3-pip && pip3 install --no-cache-dir --install-option="--prefix=/install" -r /rdm/src/py/requirements.txt
+
+FROM base
+
+RUN mkdir /opt/redis-desktop-manager
+COPY --from=builder /opt/redis-desktop-manager /opt/redis-desktop-manager
+
+WORKDIR /opt/redis-desktop-manager
+
+# install 'sudo' and 'add-apt-repository'
+RUN apt-get update && apt-get install -y --no-install-recommends sudo software-properties-common
+RUN add-apt-repository ppa:beineri/opt-qt594-xenial
+
+# install 'qt59' and 'python3'
+RUN apt-get update && apt-get install -y python3-dev qt59base qt59imageformats qt59tools qt59declarative qt59quickcontrols qt59quickcontrols2 qt59charts-no-lgpl qt59svg --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
+# copy python dependencies from builder
+RUN mkdir /install
+
+COPY --from=builder /install/lib/python3.5/site-packages /usr/local/lib/python3.5/dist-packages
+COPY --from=builder /install/bin /usr/local/bin
+	
+RUN mv qt.conf qt.backup
+COPY rdm.sh .
+RUN chmod 777 rdm.sh
+CMD ./rdm.sh
