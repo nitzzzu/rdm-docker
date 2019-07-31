@@ -14,6 +14,13 @@
     ```
 - Run the container:
     ```
-    docker run --rm -it -v %cd%/data:/root/.rdm -e DISPLAY=<ipaddress>:0.0 rdm
+    docker run --rm -v %cd%/data:/root/.rdm -e DISPLAY=<ipaddress>:0.0 rdm
     ```
 - Enjoy
+
+### Run on Linux (not tested)
+
+```
+xhost +local:docker
+docker run --rm -v $(pwd)/data:/root/.rdm -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY rdm
+```
