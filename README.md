@@ -7,12 +7,12 @@
 - Clone repo: `git clone https://github.com/nitzzzu/RedisDesktopManager.git`
 - Build the docker image: `docker build -f Dockerfile.mutistage -t rdm .`
 - Get your IP address: `ipconfig`
-- Run the container: `docker run --rm -d -v %cd%/data:/root/.rdm -e DISPLAY=<ipaddress>:0.0 rdm`
+- Run the container: `docker run --rm -d --name rdm -v %cd%/data:/root/.rdm -e DISPLAY=<ipaddress>:0.0 rdm`
 - Enjoy
 
 ### Run on Linux (not tested)
 
 ```
 xhost +local:docker
-docker run --rm -d -v $(pwd)/data:/root/.rdm -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY rdm
+docker run --rm -d --name rdm -v $(pwd)/data:/root/.rdm -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY rdm
 ```
