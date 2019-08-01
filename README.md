@@ -1,5 +1,7 @@
 ## Redis Desktop Manager 2019 on Windows
 
+<img src="images/capture.png" width="900" />
+
 ### Steps:
 - Install [Docker](https://docs.docker.com/docker-for-windows/install/): 
 - Install [VcXsrv Windows X Server](https://sourceforge.net/projects/vcxsrv/files/latest/download)
