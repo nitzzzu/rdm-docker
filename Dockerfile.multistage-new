@@ -1,0 +1,41 @@
+FROM bitnami/minideb:buster AS base
+
+FROM base as builder
+RUN apt-get update && apt-get install -y --no-install-recommends git lsb-release sudo software-properties-common build-essential python3-dev qt5-default qtdeclarative5-dev libqt5charts5-dev libssl-dev
+RUN mkdir /rdm && cd /rdm && git clone --recursive https://github.com/uglide/RedisDesktopManager.git .
+RUN apt-get install libqt5svg5-dev -y
+RUN apt-get install -y libz-dev
+RUN cd /rdm/src && qmake && make && sudo make install
+
+RUN mkdir /install
+RUN apt install -y python3-pip && pip3 install --no-cache-dir --install-option="--prefix=/install" -r /rdm/src/py/requirements.txt
+
+FROM base
+
+RUN mkdir /opt/redis-desktop-manager
+COPY --from=builder /opt/redis-desktop-manager /opt/redis-desktop-manager
+
+WORKDIR /opt/redis-desktop-manager
+
+# install 'sudo' and 'add-apt-repository'
+RUN apt-get update && apt-get install -y --no-install-recommends sudo software-properties-common
+
+# install 'qt59' and 'python3'
+RUN apt-get update && apt-get install -y qt5-default libqt5charts5 libqt5svg5 --no-install-recommends
+RUN apt-get update && apt-get install -y python3-dev
+RUN apt-get install libqt5quickwidgets5 -y
+RUN apt-get install qt5-image-formats-plugins -y
+RUN apt-get install -y qml-module-qtquick-controls
+RUN apt-get install -y qml-module-qtquick-dialogs
+RUN apt-get install -y qml-module-qtqml-models2
+RUN apt-get install -y qml-module-qt-labs-settings
+RUN apt-get install -y qml-module-qtquick-controls2
+RUN apt-get install -y qml-module-qtcharts
+# copy python dependencies from builder
+RUN mkdir /install
+
+COPY --from=builder /install/lib/python3.7/site-packages /usr/local/lib/python3.7/dist-packages
+COPY --from=builder /install/bin /usr/local/bin
+RUN rm qt.conf
+
+CMD ./rdm
