@@ -1,13 +1,22 @@
-## Redis Desktop Manager 2019 on Windows
+## Redis Desktop Manager on Docker
+
+Docker image for [Redis Desktop Manager](https://github.com/uglide/RedisDesktopManager)
 
 <img src="images/capture.png" width="900" />
 
-### Steps:
+### Setup
+
 - Install [Docker](https://docs.docker.com/docker-for-windows/install/): 
-- Install [VcXsrv Windows X Server](https://sourceforge.net/projects/vcxsrv/files/latest/download)
-- Run `XLaunch` and follow the wizard. Make sure `Disable access control` is checked.
+- (WINDOWS) Install [VcXsrv Windows X Server](https://sourceforge.net/projects/vcxsrv/files/latest/download)
+- (WINDOWS) Run `XLaunch` and follow the wizard. Make sure `Disable access control` is checked.
+
+### Build image:
+
 - Clone repo: `git clone https://github.com/nitzzzu/RedisDesktopManager.git`
 - Build the docker image: `docker build -f Dockerfile.multistage -t rdm .`
+
+### Run on Windows
+
 - Get your `<ipaddress>`: `ipconfig`
 - Run the container: `docker run --rm --network host -d --name rdm -v %cd%\data:/root/.rdm -e DISPLAY=<ipaddress>:0.0 rdm`
 
